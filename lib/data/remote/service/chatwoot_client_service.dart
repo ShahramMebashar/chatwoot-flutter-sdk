@@ -85,9 +85,9 @@ class ChatwootClientServiceImpl extends ChatwootClientService {
             createResponse.statusMessage ?? "unknown error",
             ChatwootClientExceptionType.SEND_MESSAGE_FAILED);
       }
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       throw ChatwootClientException(
-          e.message, ChatwootClientExceptionType.SEND_MESSAGE_FAILED);
+          e.message ?? "", ChatwootClientExceptionType.SEND_MESSAGE_FAILED);
     }
   }
 
@@ -107,9 +107,9 @@ class ChatwootClientServiceImpl extends ChatwootClientService {
             createResponse.statusMessage ?? "unknown error",
             ChatwootClientExceptionType.GET_MESSAGES_FAILED);
       }
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       throw ChatwootClientException(
-          e.message, ChatwootClientExceptionType.GET_MESSAGES_FAILED);
+          e.message ?? "", ChatwootClientExceptionType.GET_MESSAGES_FAILED);
     }
   }
 
@@ -126,9 +126,9 @@ class ChatwootClientServiceImpl extends ChatwootClientService {
             getResponse.statusMessage ?? "unknown error",
             ChatwootClientExceptionType.GET_CONTACT_FAILED);
       }
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       throw ChatwootClientException(
-          e.message, ChatwootClientExceptionType.GET_CONTACT_FAILED);
+          e.message ?? "", ChatwootClientExceptionType.GET_CONTACT_FAILED);
     }
   }
 
@@ -147,9 +147,9 @@ class ChatwootClientServiceImpl extends ChatwootClientService {
             createResponse.statusMessage ?? "unknown error",
             ChatwootClientExceptionType.GET_CONVERSATION_FAILED);
       }
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       throw ChatwootClientException(
-          e.message, ChatwootClientExceptionType.GET_CONVERSATION_FAILED);
+          e.message ?? "", ChatwootClientExceptionType.GET_CONVERSATION_FAILED);
     }
   }
 
@@ -167,9 +167,9 @@ class ChatwootClientServiceImpl extends ChatwootClientService {
             updateResponse.statusMessage ?? "unknown error",
             ChatwootClientExceptionType.UPDATE_CONTACT_FAILED);
       }
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       throw ChatwootClientException(
-          e.message, ChatwootClientExceptionType.UPDATE_CONTACT_FAILED);
+          e.message ?? "", ChatwootClientExceptionType.UPDATE_CONTACT_FAILED);
     }
   }
 
@@ -189,9 +189,9 @@ class ChatwootClientServiceImpl extends ChatwootClientService {
             updateResponse.statusMessage ?? "unknown error",
             ChatwootClientExceptionType.UPDATE_MESSAGE_FAILED);
       }
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       throw ChatwootClientException(
-          e.message, ChatwootClientExceptionType.UPDATE_MESSAGE_FAILED);
+          e.message ?? "", ChatwootClientExceptionType.UPDATE_MESSAGE_FAILED);
     }
   }
 
@@ -242,9 +242,9 @@ class ChatwootClientServiceImpl extends ChatwootClientService {
         throw ChatwootClientException(response.statusMessage ?? "unknown error",
             ChatwootClientExceptionType.GET_CSAT_FEEDBACK);
       }
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       throw ChatwootClientException(
-          e.message, ChatwootClientExceptionType.GET_CSAT_FEEDBACK);
+          e.message ?? "", ChatwootClientExceptionType.GET_CSAT_FEEDBACK);
     }
   }
 
@@ -264,9 +264,9 @@ class ChatwootClientServiceImpl extends ChatwootClientService {
         throw ChatwootClientException(response.statusMessage ?? "unknown error",
             ChatwootClientExceptionType.SEND_CSAT_FEEDBACK);
       }
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       throw ChatwootClientException(
-          e.message, ChatwootClientExceptionType.SEND_CSAT_FEEDBACK);
+          e.message ?? "", ChatwootClientExceptionType.SEND_CSAT_FEEDBACK);
     }
   }
 }
