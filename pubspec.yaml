@@ -4,7 +4,7 @@ version: 0.0.9
 homepage: https://github.com/chatwoot/chatwoot-flutter-sdk
 
 environment:
-  sdk: ">=2.12.0 <3.0.0"
+  sdk: ">=3.0.0 <4.0.0"
   flutter: ">=1.17.0"
 
 dependencies:
@@ -21,13 +21,19 @@ dependencies:
   riverpod: ^0.14.0+3
   synchronized: ^3.0.0
   intl: ^0.17.0
-  flutter_chat_types: ^2.4.0
+  flutter_chat_types: ^3.6.2
   stream_channel: ^2.1.0
   async: ^2.5.0
   webview_flutter: ^4.0.6
   flutter_secure_storage: ^8.0.0
   url_launcher: ^6.1.10
   path_provider: ^2.0.13
+  cached_network_image: ^3.3.1
+  media_kit: ^1.1.11 # Primary package.
+  media_kit_video: ^1.2.5 # For video rendering.
+  media_kit_libs_video: ^1.0.5 # Native video dependencies.
+  easy_image_viewer: ^1.5.1
+  flutter_markdown: ^0.7.4+3
 
 dev_dependencies:
   flutter_test:
