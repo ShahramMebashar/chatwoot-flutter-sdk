@@ -1,5 +1,3 @@
-
-
 import 'dart:async';
 import 'dart:collection';
 import 'dart:typed_data';
@@ -8,28 +6,24 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
-class VideoMessagePreview{
+class VideoMessagePreview {
   final ui.FrameInfo? firstFrame;
   final double width;
   final double height;
 
-
-  VideoMessagePreview({this.firstFrame, this.width=0, this.height=0});
-
-
+  VideoMessagePreview({this.firstFrame, this.width = 0, this.height = 0});
 }
 
-class VideoMessagePreviewJob{
-  final String jobId ;
+class VideoMessagePreviewJob {
+  final String jobId;
   final String uri;
 
   VideoMessagePreviewJob({required this.jobId, required this.uri});
-
 }
 
-class VideoMessagePreviewResult{
+class VideoMessagePreviewResult {
   ///Fetch preview job identification
-  final String jobId ;
+  final String jobId;
 
   ///Video uri
   final String uri;
@@ -37,12 +31,11 @@ class VideoMessagePreviewResult{
   ///Preview results
   final VideoMessagePreview preview;
 
-  VideoMessagePreviewResult({required this.jobId, required this.uri, required this.preview});
-
+  VideoMessagePreviewResult(
+      {required this.jobId, required this.uri, required this.preview});
 }
 
-
-class VideoPreviewLoader{
+class VideoPreviewLoader {
   ///Video controller for loading first video frame. See [ChatwootChat.build]
   VideoController controller;
 
@@ -50,53 +43,54 @@ class VideoPreviewLoader{
   final _previewJobQueue = Queue<VideoMessagePreviewJob>();
 
   ///Stream to send preview results
-  final _previewResponseStreamController = StreamController<VideoMessagePreviewResult>();
+  final _previewResponseStreamController =
+      StreamController<VideoMessagePreviewResult>();
 
   StreamSubscription? _previewResponseStreamSubscription;
 
   VideoPreviewLoader({required this.controller});
 
-  void getPreview({required String jobId, required String uri})async{
-    if(_previewJobQueue.isEmpty){
+  void getPreview({required String jobId, required String uri}) async {
+    if (_previewJobQueue.isEmpty) {
       //no video previews are being fetched
       _previewJobQueue.add(VideoMessagePreviewJob(jobId: jobId, uri: uri));
       _fromUri(jobId, uri);
-    }else{
+    } else {
       //ongoing video preview fetch. add to queue
       _previewJobQueue.add(VideoMessagePreviewJob(jobId: jobId, uri: uri));
     }
   }
-  
-  Future<VideoMessagePreview?> _getCacheVideoPreview(String jobId, String uri) async{
 
-    final fileInfo = await CachedNetworkImageProvider.defaultCacheManager.getFileFromCache(uri);
-    if(fileInfo != null){
+  Future<VideoMessagePreview?> _getCacheVideoPreview(
+      String jobId, String uri) async {
+    final fileInfo = await CachedNetworkImageProvider(uri)
+        .cacheManager!
+        .getFileFromCache(uri);
+    if (fileInfo != null) {
       // return cached preview
-      final codec = await ui.instantiateImageCodec(await fileInfo.file.readAsBytes());
+      final codec =
+          await ui.instantiateImageCodec(await fileInfo.file.readAsBytes());
       final frame = await codec.getNextFrame();
       final firstframe = frame;
       final width = frame.image.width.toDouble();
       final height = frame.image.height.toDouble();
       final cachedPreview = VideoMessagePreview(
-        firstFrame: firstframe,
-        width: width,
-        height: height
-      );
+          firstFrame: firstframe, width: width, height: height);
       return cachedPreview;
     }
     return null;
   }
 
   ///Loads first frame from video url
-  Future<void> _fromUri(String jobId, String uri) async{
-
+  Future<void> _fromUri(String jobId, String uri) async {
     //check for cached preview
     final cachedPreview = await _getCacheVideoPreview(jobId, uri);
-    if(cachedPreview != null){
+    if (cachedPreview != null) {
       // return cached preview
-      _previewResponseStreamController.add(VideoMessagePreviewResult(jobId: jobId, uri: uri, preview: cachedPreview));
+      _previewResponseStreamController.add(VideoMessagePreviewResult(
+          jobId: jobId, uri: uri, preview: cachedPreview));
       //check for pending jobs and execute
-      if(_previewJobQueue.isNotEmpty){
+      if (_previewJobQueue.isNotEmpty) {
         final job = _previewJobQueue.removeFirst();
         _fromUri(job.jobId, job.uri);
       }
@@ -112,9 +106,9 @@ class VideoPreviewLoader{
       await controller.player.setVolume(0);
       await controller.player.open(Media(uri));
       await Future.delayed(Duration(seconds: 10));
-      await controller.player.stream.position.firstWhere((d)=>d>Duration.zero);
+      await controller.player.stream.position
+          .firstWhere((d) => d > Duration.zero);
       Uint8List? frameBytes = await controller.player.screenshot();
-
 
       if (frameBytes != null) {
         // Convert the Uint8List to a ui.Image
@@ -123,9 +117,10 @@ class VideoPreviewLoader{
         firstframe = frame;
         width = frame.image.width.toDouble();
         height = frame.image.height.toDouble();
-        await CachedNetworkImageProvider.defaultCacheManager.putFile(uri, frameBytes);
+        await CachedNetworkImageProvider(uri)
+            .cacheManager!
+            .putFile(uri, frameBytes);
       }
-
     } catch (e) {
       print('Error capturing first frame: $e');
     } finally {
@@ -134,29 +129,25 @@ class VideoPreviewLoader{
     }
 
     final p = VideoMessagePreview(
-        firstFrame: firstframe,
-        width: width,
-        height: height
-    );
-
+        firstFrame: firstframe, width: width, height: height);
 
     //send preview result
-    _previewResponseStreamController.add(
-      VideoMessagePreviewResult(jobId: jobId, uri: uri, preview: p)
-    );
+    _previewResponseStreamController
+        .add(VideoMessagePreviewResult(jobId: jobId, uri: uri, preview: p));
 
     //check for pending jobs and execute
-    if(_previewJobQueue.isNotEmpty){
+    if (_previewJobQueue.isNotEmpty) {
       final job = _previewJobQueue.removeFirst();
       _fromUri(job.jobId, job.uri);
     }
   }
 
-  listen(void Function(VideoMessagePreviewResult) callback){
-    _previewResponseStreamSubscription = _previewResponseStreamController.stream.listen(callback);
+  listen(void Function(VideoMessagePreviewResult) callback) {
+    _previewResponseStreamSubscription =
+        _previewResponseStreamController.stream.listen(callback);
   }
 
-  dispose(){
+  dispose() {
     _previewResponseStreamSubscription?.cancel();
   }
 }

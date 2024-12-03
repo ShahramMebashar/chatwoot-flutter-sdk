@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 
@@ -57,13 +56,13 @@ class ChatwootChatTheme extends ChatTheme {
     ),
     Color receivedMessageDocumentIconColor = PRIMARY,
     TextStyle receivedMessageLinkDescriptionTextStyle = const TextStyle(
-      color: primary,
+      color: Colors.blue, // primary,
       fontSize: 14,
       fontWeight: FontWeight.w400,
       height: 1.428,
     ),
     TextStyle receivedMessageLinkTitleTextStyle = const TextStyle(
-      color: primary,
+      color: Colors.blue, // primary,
       fontSize: 16,
       fontWeight: FontWeight.w800,
       height: 1.375,
@@ -99,7 +98,7 @@ class ChatwootChatTheme extends ChatTheme {
     ),
     List<Color> userAvatarNameColors = CHATWOOT_AVATAR_COLORS,
     TextStyle userAvatarTextStyle = const TextStyle(
-      color: primary,
+      color: Colors.blue, // primary,
       fontSize: 12,
       fontWeight: FontWeight.w800,
       height: 1.333,
@@ -113,34 +112,29 @@ class ChatwootChatTheme extends ChatTheme {
     EdgeInsets? attachmentButtonMargin,
     EdgeInsets dateDividerMargin = const EdgeInsets.all(8),
     Color inputSurfaceTintColor = Colors.blueAccent,
-    double inputElevation= 0,
+    double inputElevation = 0,
     EdgeInsets inputMargin = const EdgeInsets.all(8),
-    EdgeInsets inputPadding= const EdgeInsets.all(8),
-    double messageInsetsHorizontal= 8,
-    double messageInsetsVertical= 8,
-    double messageMaxWidth= 500,
-    TextStyle receivedEmojiMessageTextStyle= const TextStyle(),
-    EdgeInsets sendButtonMargin= const EdgeInsets.all(8),
-    TextStyle sentEmojiMessageTextStyle= const TextStyle(),
-    EdgeInsets statusIconPadding= const EdgeInsets.all(8),
-    SystemMessageTheme systemMessageTheme= const SystemMessageTheme(
-        margin: const EdgeInsets.all(8),
-        textStyle: const TextStyle()
-    ),
-    TypingIndicatorTheme typingIndicatorTheme= const TypingIndicatorTheme(
+    EdgeInsets inputPadding = const EdgeInsets.all(8),
+    double messageInsetsHorizontal = 8,
+    double messageInsetsVertical = 8,
+    double messageMaxWidth = 500,
+    TextStyle receivedEmojiMessageTextStyle = const TextStyle(),
+    EdgeInsets sendButtonMargin = const EdgeInsets.all(8),
+    TextStyle sentEmojiMessageTextStyle = const TextStyle(),
+    EdgeInsets statusIconPadding = const EdgeInsets.all(8),
+    SystemMessageTheme systemMessageTheme = const SystemMessageTheme(
+        margin: const EdgeInsets.all(8), textStyle: const TextStyle()),
+    TypingIndicatorTheme typingIndicatorTheme = const TypingIndicatorTheme(
         animatedCirclesColor: primary,
         animatedCircleSize: 8,
         bubbleBorder: const BorderRadius.all(const Radius.circular(8)),
         bubbleColor: Colors.white,
         countAvatarColor: primary,
         countTextColor: Colors.black87,
-        multipleUserTextStyle: const TextStyle()
-    ),
-    UnreadHeaderTheme unreadHeaderTheme= const UnreadHeaderTheme(
-        color: CHATWOOT_COLOR_PRIMARY,
-        textStyle: const TextStyle()
-    ),
-    Color userAvatarImageBackgroundColor= Colors.white,
+        multipleUserTextStyle: const TextStyle()),
+    UnreadHeaderTheme unreadHeaderTheme = const UnreadHeaderTheme(
+        color: CHATWOOT_COLOR_PRIMARY, textStyle: const TextStyle()),
+    Color userAvatarImageBackgroundColor = Colors.white,
   }) : super(
           attachmentButtonIcon: attachmentButtonIcon,
           backgroundColor: backgroundColor,

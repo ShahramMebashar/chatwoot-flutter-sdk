@@ -27,7 +27,8 @@ void main() {
     final unauthenticatedmockDio = MockDio();
 
     setUpAll(() {
-      clientService = ChatwootClientServiceImpl(testBaseUrl, dio: mockDio, uDio: unauthenticatedmockDio);
+      clientService = ChatwootClientServiceImpl(testBaseUrl,
+          dio: mockDio, uDio: unauthenticatedmockDio);
     });
 
     _createSuccessResponse(body) {
@@ -52,16 +53,16 @@ void main() {
           await TestResourceUtil.readJsonResource(fileName: "message");
       final request =
           ChatwootNewMessageRequest(content: "test message", echoId: "id");
-      when(mockDio.post(any, data: anyNamed("data"))).thenAnswer(
-          (invocation){
-            assert(invocation.namedArguments[Symbol("data")] is FormData);
-            final form = invocation.namedArguments[Symbol("data")] as FormData;
-            final messageContent = form.fields.firstWhere((f)=>f.key == "content").value;
-            final echoId = form.fields.firstWhere((f)=>f.key == "echo_id").value;
-            expect(messageContent, request.content);
-            expect(echoId, request.echoId);
-            return Future.value(_createSuccessResponse(responseBody));
-          });
+      when(mockDio.post(any, data: anyNamed("data"))).thenAnswer((invocation) {
+        assert(invocation.namedArguments[Symbol("data")] is FormData);
+        final form = invocation.namedArguments[Symbol("data")] as FormData;
+        final messageContent =
+            form.fields.firstWhere((f) => f.key == "content").value;
+        final echoId = form.fields.firstWhere((f) => f.key == "echo_id").value;
+        expect(messageContent, request.content);
+        expect(echoId, request.echoId);
+        return Future.value(_createSuccessResponse(responseBody));
+      });
 
       //WHEN
       final result = await clientService.createMessage(request);
@@ -97,7 +98,7 @@ void main() {
         'Given sending message fails when createMessage is called, then throw error',
         () async {
       //GIVEN
-      final testError = DioException(requestOptions: RequestOptions(path: ""));
+      final testError = DioError(requestOptions: RequestOptions(path: ""));
       final request =
           ChatwootNewMessageRequest(content: "test message", echoId: "id");
       when(mockDio.post(any, data: anyNamed("data"))).thenThrow(testError);
@@ -159,7 +160,7 @@ void main() {
         'Given fetch messages fails when getAllMessages is called, then throw error',
         () async {
       //GIVEN
-      final testError = DioException(requestOptions: RequestOptions(path: ""));
+      final testError = DioError(requestOptions: RequestOptions(path: ""));
       when(mockDio.get(any)).thenThrow(testError);
 
       //WHEN
@@ -217,7 +218,7 @@ void main() {
         'Given fetch contact fails when getContact is called, then throw error',
         () async {
       //GIVEN
-      final testError = DioException(requestOptions: RequestOptions(path: ""));
+      final testError = DioError(requestOptions: RequestOptions(path: ""));
       when(mockDio.get(any)).thenThrow(testError);
 
       //WHEN
@@ -277,7 +278,7 @@ void main() {
         'Given fetch conversations fails when getConversations is called, then throw error',
         () async {
       //GIVEN
-      final testError = DioException(requestOptions: RequestOptions(path: ""));
+      final testError = DioError(requestOptions: RequestOptions(path: ""));
       when(mockDio.get(any)).thenThrow(testError);
 
       //WHEN
@@ -338,7 +339,7 @@ void main() {
         () async {
       //GIVEN
       final update = {"name": "Updated name"};
-      final testError = DioException(requestOptions: RequestOptions(path: ""));
+      final testError = DioError(requestOptions: RequestOptions(path: ""));
       when(mockDio.patch(any, data: update)).thenThrow(testError);
 
       //WHEN
@@ -357,156 +358,159 @@ void main() {
 
     test(
         'Given message is successfully updated when updateMessage is called, then return updated message',
-            () async {
-          //GIVEN
-          final responseBody =
+        () async {
+      //GIVEN
+      final responseBody =
           await TestResourceUtil.readJsonResource(fileName: "message");
-          final testMessageId = "id";
-          final update = {"content": "Updated content"};
-          when(mockDio.patch(any, data: update)).thenAnswer(
-                  (_) => Future.value(_createSuccessResponse(responseBody)));
+      final testMessageId = "id";
+      final update = {"content": "Updated content"};
+      when(mockDio.patch(any, data: update)).thenAnswer(
+          (_) => Future.value(_createSuccessResponse(responseBody)));
 
-          //WHEN
-          final result = await clientService.updateMessage(testMessageId, update);
+      //WHEN
+      final result = await clientService.updateMessage(testMessageId, update);
 
-          //THEN
-          expect(result, ChatwootMessage.fromJson(responseBody));
-        });
+      //THEN
+      expect(result, ChatwootMessage.fromJson(responseBody));
+    });
 
     test(
         'Given message update returns with error response when updateMessage is called, then throw error',
-            () async {
-          //GIVEN
-          final testMessageId = "id";
-          final update = {"content": "Updated content"};
-          when(mockDio.patch(any, data: update)).thenAnswer(
-                  (_) => Future.value(_createErrorResponse(statusCode: 401, body: {})));
+        () async {
+      //GIVEN
+      final testMessageId = "id";
+      final update = {"content": "Updated content"};
+      when(mockDio.patch(any, data: update)).thenAnswer(
+          (_) => Future.value(_createErrorResponse(statusCode: 401, body: {})));
 
-          //WHEN
-          ChatwootClientException? chatwootClientException;
-          try {
-            await clientService.updateMessage(testMessageId, update);
-          } on ChatwootClientException catch (e) {
-            chatwootClientException = e;
-          }
+      //WHEN
+      ChatwootClientException? chatwootClientException;
+      try {
+        await clientService.updateMessage(testMessageId, update);
+      } on ChatwootClientException catch (e) {
+        chatwootClientException = e;
+      }
 
-          //THEN
-          verify(mockDio.patch(argThat(contains(testMessageId)), data: update));
-          expect(chatwootClientException, isNotNull);
-          expect(chatwootClientException!.type,
-              equals(ChatwootClientExceptionType.UPDATE_MESSAGE_FAILED));
-        });
+      //THEN
+      verify(mockDio.patch(argThat(contains(testMessageId)), data: update));
+      expect(chatwootClientException, isNotNull);
+      expect(chatwootClientException!.type,
+          equals(ChatwootClientExceptionType.UPDATE_MESSAGE_FAILED));
+    });
 
     test(
         'Given message update fails when updateMessage is called, then throw error',
-            () async {
-          //GIVEN
-          final testMessageId = "id";
-          final update = {"content": "Updated content"};
-          final testError = DioException(requestOptions: RequestOptions(path: ""));
-          when(mockDio.patch(any, data: update)).thenThrow(testError);
+        () async {
+      //GIVEN
+      final testMessageId = "id";
+      final update = {"content": "Updated content"};
+      final testError = DioError(requestOptions: RequestOptions(path: ""));
+      when(mockDio.patch(any, data: update)).thenThrow(testError);
 
-          //WHEN
-          ChatwootClientException? chatwootClientException;
-          try {
-            await clientService.updateMessage(testMessageId, update);
-          } on ChatwootClientException catch (e) {
-            chatwootClientException = e;
-          }
+      //WHEN
+      ChatwootClientException? chatwootClientException;
+      try {
+        await clientService.updateMessage(testMessageId, update);
+      } on ChatwootClientException catch (e) {
+        chatwootClientException = e;
+      }
 
-          //THEN
-          verify(mockDio.patch(argThat(contains(testMessageId)), data: update));
-          expect(chatwootClientException, isNotNull);
-          expect(chatwootClientException!.type,
-              equals(ChatwootClientExceptionType.UPDATE_MESSAGE_FAILED));
-        });
+      //THEN
+      verify(mockDio.patch(argThat(contains(testMessageId)), data: update));
+      expect(chatwootClientException, isNotNull);
+      expect(chatwootClientException!.type,
+          equals(ChatwootClientExceptionType.UPDATE_MESSAGE_FAILED));
+    });
 
     test(
         'Given csat survey is successfully sent when sendCsatFeedBack is called, then return feedback response',
-            () async {
-          //GIVEN
-          final responseBody =
+        () async {
+      //GIVEN
+      final responseBody =
           await TestResourceUtil.readJsonResource(fileName: "csat_feedback");
-          final testConversationUuid = "conversation-uuid";
-          final feedbackRequest = SendCsatSurveyRequest(rating: 1, feedbackMessage: "test message");
-          final requestBody = {
-            "message":{
-              "submitted_values":{
-                "csat_survey_response": feedbackRequest.toJson()
-              }
-            }
-          };
-          when(unauthenticatedmockDio.put(any, data: requestBody)).thenAnswer(
-                  (_) => Future.value(_createSuccessResponse(responseBody)));
+      final testConversationUuid = "conversation-uuid";
+      final feedbackRequest =
+          SendCsatSurveyRequest(rating: 1, feedbackMessage: "test message");
+      final requestBody = {
+        "message": {
+          "submitted_values": {"csat_survey_response": feedbackRequest.toJson()}
+        }
+      };
+      when(unauthenticatedmockDio.put(any, data: requestBody)).thenAnswer(
+          (_) => Future.value(_createSuccessResponse(responseBody)));
 
-          //WHEN
-          final result = await clientService.sendCsatFeedBack(testConversationUuid, feedbackRequest);
+      //WHEN
+      final result = await clientService.sendCsatFeedBack(
+          testConversationUuid, feedbackRequest);
 
-          //THEN
-          expect(result, CsatSurveyFeedbackResponse.fromJson(responseBody));
-        });
+      //THEN
+      expect(result, CsatSurveyFeedbackResponse.fromJson(responseBody));
+    });
 
     test(
         'Given send csat survey returns with error response when sendCsatFeedBack is called, then throw error',
-            () async {
-          //GIVEN
-          final testConversationUuid = "conversation-uuid";
-          final feedbackRequest = SendCsatSurveyRequest(rating: 1, feedbackMessage: "test message");
-          final requestBody = {
-            "message":{
-              "submitted_values":{
-                "csat_survey_response": feedbackRequest.toJson()
-              }
-            }
-          };
-          when(unauthenticatedmockDio.put(any, data: requestBody)).thenAnswer(
-                  (_) => Future.value(_createErrorResponse(statusCode: 500, body: {})));
+        () async {
+      //GIVEN
+      final testConversationUuid = "conversation-uuid";
+      final feedbackRequest =
+          SendCsatSurveyRequest(rating: 1, feedbackMessage: "test message");
+      final requestBody = {
+        "message": {
+          "submitted_values": {"csat_survey_response": feedbackRequest.toJson()}
+        }
+      };
+      when(unauthenticatedmockDio.put(any, data: requestBody)).thenAnswer(
+          (_) => Future.value(_createErrorResponse(statusCode: 500, body: {})));
 
-          //WHEN
-          ChatwootClientException? chatwootClientException;
-          try {
-            await clientService.sendCsatFeedBack(testConversationUuid, feedbackRequest);
-          } on ChatwootClientException catch (e) {
-            chatwootClientException = e;
-          }
+      //WHEN
+      ChatwootClientException? chatwootClientException;
+      try {
+        await clientService.sendCsatFeedBack(
+            testConversationUuid, feedbackRequest);
+      } on ChatwootClientException catch (e) {
+        chatwootClientException = e;
+      }
 
-          //THEN
-          verify(unauthenticatedmockDio.put(argThat(contains(testConversationUuid)), data: requestBody));
-          expect(chatwootClientException, isNotNull);
-          expect(chatwootClientException!.type,
-              equals(ChatwootClientExceptionType.SEND_CSAT_FEEDBACK));
-        });
+      //THEN
+      verify(unauthenticatedmockDio.put(argThat(contains(testConversationUuid)),
+          data: requestBody));
+      expect(chatwootClientException, isNotNull);
+      expect(chatwootClientException!.type,
+          equals(ChatwootClientExceptionType.SEND_CSAT_FEEDBACK));
+    });
 
     test(
         'Given send csat feedback fails when sendCsatFeedBack is called, then throw error',
-            () async {
-          //GIVEN
-          final testConversationUuid = "conversation-uuid";
-          final feedbackRequest = SendCsatSurveyRequest(rating: 1, feedbackMessage: "test message");
-          final testError = DioException(requestOptions: RequestOptions(path: ""));
-          final requestBody = {
-            "message":{
-              "submitted_values":{
-                "csat_survey_response": feedbackRequest.toJson()
-              }
-            }
-          };
-          when(unauthenticatedmockDio.put(any, data: requestBody)).thenThrow(testError);
+        () async {
+      //GIVEN
+      final testConversationUuid = "conversation-uuid";
+      final feedbackRequest =
+          SendCsatSurveyRequest(rating: 1, feedbackMessage: "test message");
+      final testError = DioError(requestOptions: RequestOptions(path: ""));
+      final requestBody = {
+        "message": {
+          "submitted_values": {"csat_survey_response": feedbackRequest.toJson()}
+        }
+      };
+      when(unauthenticatedmockDio.put(any, data: requestBody))
+          .thenThrow(testError);
 
-          //WHEN
-          ChatwootClientException? chatwootClientException;
-          try {
-            await clientService.sendCsatFeedBack(testConversationUuid, feedbackRequest);
-          } on ChatwootClientException catch (e) {
-            chatwootClientException = e;
-          }
+      //WHEN
+      ChatwootClientException? chatwootClientException;
+      try {
+        await clientService.sendCsatFeedBack(
+            testConversationUuid, feedbackRequest);
+      } on ChatwootClientException catch (e) {
+        chatwootClientException = e;
+      }
 
-          //THEN
-          verify(unauthenticatedmockDio.put(argThat(contains(testConversationUuid)), data: requestBody));
-          expect(chatwootClientException, isNotNull);
-          expect(chatwootClientException!.type,
-              equals(ChatwootClientExceptionType.SEND_CSAT_FEEDBACK));
-        });
+      //THEN
+      verify(unauthenticatedmockDio.put(argThat(contains(testConversationUuid)),
+          data: requestBody));
+      expect(chatwootClientException, isNotNull);
+      expect(chatwootClientException!.type,
+          equals(ChatwootClientExceptionType.SEND_CSAT_FEEDBACK));
+    });
 
     test(
         'Given websocket connection is successful when startWebSocketConnection is called, then subscribe for events',

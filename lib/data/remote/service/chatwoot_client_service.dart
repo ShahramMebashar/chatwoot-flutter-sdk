@@ -14,7 +14,7 @@ import 'package:chatwoot_sdk/data/remote/service/chatwoot_client_api_interceptor
 import 'package:dio/dio.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:mime/mime.dart';
-
+import 'package:http_parser/http_parser.dart';
 
 /// Service for handling chatwoot api calls
 /// See [ChatwootClientServiceImpl]
@@ -36,7 +36,8 @@ abstract class ChatwootClientService {
 
   Future<ChatwootMessage> updateMessage(String messageIdentifier, update);
 
-  Future<CsatSurveyFeedbackResponse> sendCsatFeedBack(String conversationUuid, SendCsatSurveyRequest request);
+  Future<CsatSurveyFeedbackResponse> sendCsatFeedBack(
+      String conversationUuid, SendCsatSurveyRequest request);
 
   Future<CsatSurveyFeedbackResponse?> getCsatFeedback(String conversationUuid);
 
@@ -49,7 +50,8 @@ abstract class ChatwootClientService {
 }
 
 class ChatwootClientServiceImpl extends ChatwootClientService {
-  ChatwootClientServiceImpl(String baseUrl, {required Dio dio, required Dio uDio})
+  ChatwootClientServiceImpl(String baseUrl,
+      {required Dio dio, required Dio uDio})
       : super(baseUrl, dio, uDio);
 
   ///Sends message to chatwoot inbox
@@ -57,17 +59,19 @@ class ChatwootClientServiceImpl extends ChatwootClientService {
   Future<ChatwootMessage> createMessage(
       ChatwootNewMessageRequest request) async {
     try {
-
       FormData formData = FormData.fromMap({
         'echo_id': request.echoId,
         'content': request.content,
       });
-      for(final attachment in request.attachments){
-        formData.files.add(MapEntry('attachments[]',await MultipartFile.fromBytes(
-          attachment.bytes,
-          filename: attachment.name,
-          contentType: DioMediaType.parse(lookupMimeType(attachment.name) ?? 'application/octet-stream')
-        )));
+      for (final attachment in request.attachments) {
+        formData.files.add(MapEntry(
+            'attachments[]',
+            await MultipartFile.fromBytes(
+              attachment.bytes,
+              filename: attachment.name,
+              contentType: MediaType.parse(lookupMimeType(attachment.name) ??
+                  'application/octet-stream'),
+            )));
       }
       final createResponse = await _dio.post(
           "/public/api/v1/inboxes/${ChatwootClientApiInterceptor.INTERCEPTOR_INBOX_IDENTIFIER_PLACEHOLDER}/contacts/${ChatwootClientApiInterceptor.INTERCEPTOR_CONTACT_IDENTIFIER_PLACEHOLDER}/conversations/${ChatwootClientApiInterceptor.INTERCEPTOR_CONVERSATION_IDENTIFIER_PLACEHOLDER}/messages",
@@ -81,9 +85,9 @@ class ChatwootClientServiceImpl extends ChatwootClientService {
             createResponse.statusMessage ?? "unknown error",
             ChatwootClientExceptionType.SEND_MESSAGE_FAILED);
       }
-    } on DioException catch (e) {
+    } on DioError catch (e) {
       throw ChatwootClientException(
-          e.message ?? '', ChatwootClientExceptionType.SEND_MESSAGE_FAILED);
+          e.message, ChatwootClientExceptionType.SEND_MESSAGE_FAILED);
     }
   }
 
@@ -103,9 +107,9 @@ class ChatwootClientServiceImpl extends ChatwootClientService {
             createResponse.statusMessage ?? "unknown error",
             ChatwootClientExceptionType.GET_MESSAGES_FAILED);
       }
-    } on DioException catch (e) {
+    } on DioError catch (e) {
       throw ChatwootClientException(
-          e.message ?? '', ChatwootClientExceptionType.GET_MESSAGES_FAILED);
+          e.message, ChatwootClientExceptionType.GET_MESSAGES_FAILED);
     }
   }
 
@@ -122,9 +126,9 @@ class ChatwootClientServiceImpl extends ChatwootClientService {
             getResponse.statusMessage ?? "unknown error",
             ChatwootClientExceptionType.GET_CONTACT_FAILED);
       }
-    } on DioException catch (e) {
+    } on DioError catch (e) {
       throw ChatwootClientException(
-          e.message ?? '', ChatwootClientExceptionType.GET_CONTACT_FAILED);
+          e.message, ChatwootClientExceptionType.GET_CONTACT_FAILED);
     }
   }
 
@@ -143,9 +147,9 @@ class ChatwootClientServiceImpl extends ChatwootClientService {
             createResponse.statusMessage ?? "unknown error",
             ChatwootClientExceptionType.GET_CONVERSATION_FAILED);
       }
-    } on DioException catch (e) {
+    } on DioError catch (e) {
       throw ChatwootClientException(
-          e.message ?? '', ChatwootClientExceptionType.GET_CONVERSATION_FAILED);
+          e.message, ChatwootClientExceptionType.GET_CONVERSATION_FAILED);
     }
   }
 
@@ -163,9 +167,9 @@ class ChatwootClientServiceImpl extends ChatwootClientService {
             updateResponse.statusMessage ?? "unknown error",
             ChatwootClientExceptionType.UPDATE_CONTACT_FAILED);
       }
-    } on DioException catch (e) {
+    } on DioError catch (e) {
       throw ChatwootClientException(
-          e.message ?? '', ChatwootClientExceptionType.UPDATE_CONTACT_FAILED);
+          e.message, ChatwootClientExceptionType.UPDATE_CONTACT_FAILED);
     }
   }
 
@@ -185,9 +189,9 @@ class ChatwootClientServiceImpl extends ChatwootClientService {
             updateResponse.statusMessage ?? "unknown error",
             ChatwootClientExceptionType.UPDATE_MESSAGE_FAILED);
       }
-    } on DioException catch (e) {
+    } on DioError catch (e) {
       throw ChatwootClientException(
-          e.message ?? '', ChatwootClientExceptionType.UPDATE_MESSAGE_FAILED);
+          e.message, ChatwootClientExceptionType.UPDATE_MESSAGE_FAILED);
     }
   }
 
@@ -225,45 +229,44 @@ class ChatwootClientServiceImpl extends ChatwootClientService {
   }
 
   @override
-  Future<CsatSurveyFeedbackResponse?> getCsatFeedback(String conversationUuid) async{
+  Future<CsatSurveyFeedbackResponse?> getCsatFeedback(
+      String conversationUuid) async {
     try {
-      final response = await _dio.get(
-          "/public/api/v1/csat_survey/$conversationUuid");
+      final response =
+          await _dio.get("/public/api/v1/csat_survey/$conversationUuid");
       if ((response.statusCode ?? 0).isBetween(199, 300)) {
-        return response.data != null ? CsatSurveyFeedbackResponse.fromJson(response.data) : null;
+        return response.data != null
+            ? CsatSurveyFeedbackResponse.fromJson(response.data)
+            : null;
       } else {
-        throw ChatwootClientException(
-            response.statusMessage ?? "unknown error",
+        throw ChatwootClientException(response.statusMessage ?? "unknown error",
             ChatwootClientExceptionType.GET_CSAT_FEEDBACK);
       }
-    } on DioException catch (e) {
+    } on DioError catch (e) {
       throw ChatwootClientException(
-          e.message ?? '', ChatwootClientExceptionType.GET_CSAT_FEEDBACK);
+          e.message, ChatwootClientExceptionType.GET_CSAT_FEEDBACK);
     }
   }
 
   @override
-  Future<CsatSurveyFeedbackResponse> sendCsatFeedBack(String conversationUuid, SendCsatSurveyRequest request) async{
+  Future<CsatSurveyFeedbackResponse> sendCsatFeedBack(
+      String conversationUuid, SendCsatSurveyRequest request) async {
     try {
-      final response = await _udio.put(
-          "/public/api/v1/csat_survey/$conversationUuid",
-          data: {
-            "message":{
-              "submitted_values":{
-                "csat_survey_response": request.toJson()
-              }
-            }
-          });
+      final response = await _udio
+          .put("/public/api/v1/csat_survey/$conversationUuid", data: {
+        "message": {
+          "submitted_values": {"csat_survey_response": request.toJson()}
+        }
+      });
       if ((response.statusCode ?? 0).isBetween(199, 300)) {
         return CsatSurveyFeedbackResponse.fromJson(response.data);
       } else {
-        throw ChatwootClientException(
-            response.statusMessage ?? "unknown error",
+        throw ChatwootClientException(response.statusMessage ?? "unknown error",
             ChatwootClientExceptionType.SEND_CSAT_FEEDBACK);
       }
-    } on DioException catch (e) {
+    } on DioError catch (e) {
       throw ChatwootClientException(
-          e.message ?? '', ChatwootClientExceptionType.SEND_CSAT_FEEDBACK);
+          e.message, ChatwootClientExceptionType.SEND_CSAT_FEEDBACK);
     }
   }
 }

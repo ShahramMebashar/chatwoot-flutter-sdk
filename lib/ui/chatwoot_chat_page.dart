@@ -26,15 +26,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:http/http.dart' as http;
 
-
-class FileAttachment{
+class FileAttachment {
   final Uint8List bytes;
   final String name;
   final String path;
 
   FileAttachment({required this.bytes, required this.name, required this.path});
 }
-
 
 ///Chatwoot chat widget
 /// {@category FlutterClientSdk}
@@ -49,7 +47,6 @@ class ChatwootChat extends StatefulWidget {
   ///
   /// For more details see https://www.chatwoot.com/docs/product/channels/api/client-apis
   final String inboxIdentifier;
-
 
   ///Key used to generate user identifier hash
   ///
@@ -181,7 +178,8 @@ class ChatwootChat extends StatefulWidget {
   _ChatwootChatState createState() => _ChatwootChatState();
 }
 
-class _ChatwootChatState extends State<ChatwootChat> with WidgetsBindingObserver{
+class _ChatwootChatState extends State<ChatwootChat>
+    with WidgetsBindingObserver {
   ///
   List<types.Message> _messages = [];
 
@@ -222,10 +220,10 @@ class _ChatwootChatState extends State<ChatwootChat> with WidgetsBindingObserver
       onConfirmedSubscription: () {
         widget.onConfirmedSubscription?.call();
       },
-      onConversationIsOnline: (){
+      onConversationIsOnline: () {
         widget.onConversationIsOnline?.call();
       },
-      onConversationIsOffline: (){
+      onConversationIsOffline: () {
         widget.onConversationIsOffline?.call();
       },
       onConversationStartedTyping: () {
@@ -238,7 +236,7 @@ class _ChatwootChatState extends State<ChatwootChat> with WidgetsBindingObserver
         if (widget.enablePersistence) {
           setState(() {
             _messages = persistedMessages
-                .where((m)=>m.contentType != "input_csat")
+                .where((m) => m.contentType != "input_csat")
                 .map((message) => _chatwootMessageToTextMessage(message))
                 .toList();
           });
@@ -251,16 +249,15 @@ class _ChatwootChatState extends State<ChatwootChat> with WidgetsBindingObserver
         }
         setState(() {
           final chatMessages = messages
-              .where((m)=>m.contentType != "input_csat")
-              .map((message){
-                return _chatwootMessageToTextMessage(message);
-          })
-              .toList();
+              .where((m) => m.contentType != "input_csat")
+              .map((message) {
+            return _chatwootMessageToTextMessage(message);
+          }).toList();
           final mergedMessages = mergeLists(
-              list1: chatMessages, list2: _messages,
-              getItemKey: (item)=>item.id,
-              merger: (item1, item2)=>item1
-          );
+              list1: chatMessages,
+              list2: _messages,
+              getItemKey: (item) => item.id,
+              merger: (item1, item2) => item1);
           final now = DateTime.now().millisecondsSinceEpoch;
           mergedMessages.sort((a, b) {
             return (b.createdAt ?? now).compareTo(a.createdAt ?? now);
@@ -270,7 +267,7 @@ class _ChatwootChatState extends State<ChatwootChat> with WidgetsBindingObserver
         widget.onMessagesRetrieved?.call(messages);
       },
       onMessageReceived: (chatwootMessage) {
-        if(chatwootMessage.contentType == "input_csat"){
+        if (chatwootMessage.contentType == "input_csat") {
           //csat message is handled manually
           return;
         }
@@ -286,38 +283,36 @@ class _ChatwootChatState extends State<ChatwootChat> with WidgetsBindingObserver
         widget.onMessageUpdated?.call(chatwootMessage);
       },
       onMessageSent: (chatwootMessage, echoId) {
-        types.Message textMessage = _chatwootMessageToTextMessage(chatwootMessage, echoId: echoId, messageStatus: types.Status.sent);
+        types.Message textMessage = _chatwootMessageToTextMessage(
+            chatwootMessage,
+            echoId: echoId,
+            messageStatus: types.Status.sent);
         _handleMessageSent(textMessage);
         widget.onMessageSent?.call(chatwootMessage);
       },
       onConversationResolved: (conversationUuid) {
-
         final resolvedMessage = types.TextMessage(
             id: "resolved",
             text: widget.l10n.conversationResolvedMessage,
             author: types.User(
-                id: idGen.v4(),),
+              id: idGen.v4(),
+            ),
             status: types.Status.delivered);
         _addMessage(resolvedMessage);
         final csatMessage = types.CustomMessage(
             id: "csat",
             author: types.User(
-                id: idGen.v4(),),
-            metadata: {
-              "conversationUuid": conversationUuid
-            },
+              id: idGen.v4(),
+            ),
+            metadata: {"conversationUuid": conversationUuid},
             status: types.Status.delivered);
         _addMessage(csatMessage);
       },
-      onCsatSurveyResponseRecorded: (feedback){
-
+      onCsatSurveyResponseRecorded: (feedback) {
         final resolvedMessage = types.CustomMessage(
             id: "csat",
-            author: types.User(
-                id: idGen.v4()),
-            metadata: {
-              "feedback": feedback
-            },
+            author: types.User(id: idGen.v4()),
+            metadata: {"feedback": feedback},
             status: types.Status.delivered);
         _handleMessageUpdated(resolvedMessage);
       },
@@ -381,8 +376,8 @@ class _ChatwootChatState extends State<ChatwootChat> with WidgetsBindingObserver
     return result;
   }
 
-
-  types.Message _chatwootMessageToTextMessage(ChatwootMessage message, {String? echoId, types.Status? messageStatus}) {
+  types.Message _chatwootMessageToTextMessage(ChatwootMessage message,
+      {String? echoId, types.Status? messageStatus}) {
     String? avatarUrl = message.sender?.avatarUrl ?? message.sender?.thumbnail;
 
     //Sets avatar url to null if its a gravatar not found url
@@ -390,28 +385,28 @@ class _ChatwootChatState extends State<ChatwootChat> with WidgetsBindingObserver
     if (avatarUrl?.contains("?d=404") ?? false) {
       avatarUrl = null;
     }
-    final nameSplit = (message.sender?.name??"C ").split(" ");
+    final nameSplit = (message.sender?.name ?? "C ").split(" ");
     final firstName = nameSplit.first;
     final lastName = nameSplit.last;
     types.User author = message.isMine
         ? _user
         : types.User(
-      id: message.sender?.id.toString() ?? idGen.v4(),
-      firstName: firstName,
-      lastName: lastName,
-      imageUrl: avatarUrl,
-    );
+            id: message.sender?.id.toString() ?? idGen.v4(),
+            firstName: firstName,
+            lastName: lastName,
+            imageUrl: avatarUrl,
+          );
     final metadata = <String, dynamic>{
-      "sentAt": DateFormat("MMM d, hh:mm a").format(DateTime.parse(message.createdAt))
+      "sentAt":
+          DateFormat("MMM d, hh:mm a").format(DateTime.parse(message.createdAt))
     };
-    if(message.attachments?.first.dataUrl?.isNotEmpty ?? false){
+    if (message.attachments?.first.dataUrl?.isNotEmpty ?? false) {
       Uri uri = Uri.parse(message.attachments!.first.dataUrl!);
 
       // Get the last path segment from the URL (after the last '/')
-      String fileName = uri.pathSegments.isNotEmpty
-          ? uri.pathSegments.last
-          : '';
-      if(message.attachments!.first.fileType == "image"){
+      String fileName =
+          uri.pathSegments.isNotEmpty ? uri.pathSegments.last : '';
+      if (message.attachments!.first.fileType == "image") {
         return types.ImageMessage(
             id: echoId ?? message.id.toString(),
             author: author,
@@ -420,8 +415,9 @@ class _ChatwootChatState extends State<ChatwootChat> with WidgetsBindingObserver
             size: message.attachments!.first.fileSize ?? 0,
             uri: message.attachments!.first.dataUrl!,
             status: messageStatus ?? types.Status.seen,
-            createdAt: DateTime.parse(message.createdAt).millisecondsSinceEpoch);
-      }else if(message.attachments!.first.fileType == "video"){
+            createdAt:
+                DateTime.parse(message.createdAt).millisecondsSinceEpoch);
+      } else if (message.attachments!.first.fileType == "video") {
         final videoMessage = types.VideoMessage(
             id: echoId ?? message.id.toString(),
             author: author,
@@ -432,22 +428,25 @@ class _ChatwootChatState extends State<ChatwootChat> with WidgetsBindingObserver
             size: message.attachments!.first.fileSize ?? 0,
             uri: message.attachments!.first.dataUrl!,
             status: messageStatus ?? types.Status.seen,
-            createdAt: DateTime.parse(message.createdAt).millisecondsSinceEpoch);
+            createdAt:
+                DateTime.parse(message.createdAt).millisecondsSinceEpoch);
 
-        videoPreviewLoader.getPreview(jobId: videoMessage.id, uri: videoMessage.uri);
+        videoPreviewLoader.getPreview(
+            jobId: videoMessage.id, uri: videoMessage.uri);
         return videoMessage;
-      }else if(message.attachments!.first.fileType == "audio"){
+      } else if (message.attachments!.first.fileType == "audio") {
         return types.AudioMessage(
             id: echoId ?? message.id.toString(),
             author: author,
-            duration:Duration.zero,
+            duration: Duration.zero,
             name: fileName,
             metadata: metadata,
             size: message.attachments!.first.fileSize ?? 0,
             uri: message.attachments!.first.dataUrl!,
             status: messageStatus ?? types.Status.seen,
-            createdAt: DateTime.parse(message.createdAt).millisecondsSinceEpoch);
-      }else{
+            createdAt:
+                DateTime.parse(message.createdAt).millisecondsSinceEpoch);
+      } else {
         return types.FileMessage(
             id: echoId ?? message.id.toString(),
             author: author,
@@ -456,7 +455,8 @@ class _ChatwootChatState extends State<ChatwootChat> with WidgetsBindingObserver
             size: message.attachments!.first.fileSize ?? 0,
             uri: message.attachments!.first.dataUrl!,
             status: messageStatus ?? types.Status.seen,
-            createdAt: DateTime.parse(message.createdAt).millisecondsSinceEpoch);
+            createdAt:
+                DateTime.parse(message.createdAt).millisecondsSinceEpoch);
       }
     }
 
@@ -506,9 +506,7 @@ class _ChatwootChatState extends State<ChatwootChat> with WidgetsBindingObserver
     });
   }
 
-
   void _handleMessageTap(BuildContext _, types.Message message) async {
-
     if (message.status == types.Status.error && message is types.TextMessage) {
       _handleResendMessage(message);
       return;
@@ -517,32 +515,28 @@ class _ChatwootChatState extends State<ChatwootChat> with WidgetsBindingObserver
       var localPath = message.uri;
 
       if (localPath.startsWith('http')) {
+        final documentsDir = (await getApplicationDocumentsDirectory()).path;
+        final cacheLocalPath = '$documentsDir/${message.name}';
 
-          final documentsDir = (await getApplicationDocumentsDirectory()).path;
-          final cacheLocalPath = '$documentsDir/${message.name}';
-
-          if (!File(cacheLocalPath).existsSync()) {
-
-            final client = http.Client();
-            final request = await client.get(Uri.parse(localPath));
-            final bytes = request.bodyBytes;
-            final file = File(cacheLocalPath);
-            await file.writeAsBytes(bytes);
-          }
-          localPath = cacheLocalPath;
-
+        if (!File(cacheLocalPath).existsSync()) {
+          final client = http.Client();
+          final request = await client.get(Uri.parse(localPath));
+          final bytes = request.bodyBytes;
+          final file = File(cacheLocalPath);
+          await file.writeAsBytes(bytes);
+        }
+        localPath = cacheLocalPath;
       }
       widget.onMessageTap?.call(context, message);
 
       await widget.openFile?.call(localPath);
     }
 
-    if(message is types.ImageMessage){
+    if (message is types.ImageMessage) {
       final imageProvider = CachedNetworkImageProvider(message.uri);
       showImageViewer(context, imageProvider);
     }
   }
-
 
   void _handleMessageSent(
     types.Message message,
@@ -557,10 +551,10 @@ class _ChatwootChatState extends State<ChatwootChat> with WidgetsBindingObserver
   }
 
   void _handleMessageUpdated(
-      types.Message message,
-      ) {
+    types.Message message,
+  ) {
     final index = _messages.indexWhere((element) => element.id == message.id);
-    if(index == -1){
+    if (index == -1) {
       return;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -570,17 +564,13 @@ class _ChatwootChatState extends State<ChatwootChat> with WidgetsBindingObserver
     });
   }
 
-  void _handleVideoPreviewLoaded(
-      VideoMessagePreviewResult result
-  ) {
-
+  void _handleVideoPreviewLoaded(VideoMessagePreviewResult result) {
     final index = _messages.indexWhere((element) => element.id == result.jobId);
-    if(index > -1){
+    if (index > -1) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() {
-          _messages[index] = _messages[index].copyWith(metadata: {
-            "preview": result.preview
-          });
+          _messages[index] =
+              _messages[index].copyWith(metadata: {"preview": result.preview});
         });
       });
     }
@@ -601,11 +591,11 @@ class _ChatwootChatState extends State<ChatwootChat> with WidgetsBindingObserver
     widget.onSendPressed?.call(message);
   }
 
-  void _handleAttachmentPressed() async{
+  void _handleAttachmentPressed() async {
     final attachment = await widget.onAttachmentPressed?.call();
-    if(attachment != null){
+    if (attachment != null) {
       types.Message message;
-      if(lookupMimeType(attachment.name)?.startsWith("image") ?? false){
+      if (lookupMimeType(attachment.name)?.startsWith("image") ?? false) {
         message = types.ImageMessage(
             author: _user,
             createdAt: DateTime.now().millisecondsSinceEpoch,
@@ -614,8 +604,8 @@ class _ChatwootChatState extends State<ChatwootChat> with WidgetsBindingObserver
             uri: attachment.path,
             size: attachment.bytes.length,
             status: types.Status.sending);
-      }else if(lookupMimeType(attachment.name)?.startsWith("video") ?? false){
-
+      } else if (lookupMimeType(attachment.name)?.startsWith("video") ??
+          false) {
         message = types.VideoMessage(
             author: _user,
             createdAt: DateTime.now().millisecondsSinceEpoch,
@@ -626,7 +616,8 @@ class _ChatwootChatState extends State<ChatwootChat> with WidgetsBindingObserver
             status: types.Status.sending);
 
         videoPreviewLoader.getPreview(jobId: message.id, uri: attachment.path);
-      }else if(lookupMimeType(attachment.name)?.startsWith("audio") ?? false){
+      } else if (lookupMimeType(attachment.name)?.startsWith("audio") ??
+          false) {
         message = types.AudioMessage(
             author: _user,
             createdAt: DateTime.now().millisecondsSinceEpoch,
@@ -636,7 +627,7 @@ class _ChatwootChatState extends State<ChatwootChat> with WidgetsBindingObserver
             size: attachment.bytes.length,
             duration: Duration.zero,
             status: types.Status.sending);
-      }else{
+      } else {
         message = types.FileMessage(
             author: _user,
             createdAt: DateTime.now().millisecondsSinceEpoch,
@@ -649,11 +640,12 @@ class _ChatwootChatState extends State<ChatwootChat> with WidgetsBindingObserver
 
       _addMessage(message);
 
-      chatwootClient!
-          .sendMessage(content: attachment.name, echoId: message.id, attachment: [attachment]);
+      chatwootClient!.sendMessage(
+          content: attachment.name,
+          echoId: message.id,
+          attachment: [attachment]);
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -666,7 +658,13 @@ class _ChatwootChatState extends State<ChatwootChat> with WidgetsBindingObserver
         children: [
           //offscreen video player used to fetch first frame of video messages. media_kit screenshot doesn't work without
           //controller tied to the video widget
-          IgnorePointer(child:Opacity(opacity: 0,child: Video(controller: controller, fit: BoxFit.contain,))),
+          IgnorePointer(
+              child: Opacity(
+                  opacity: 0,
+                  child: Video(
+                    controller: controller,
+                    fit: BoxFit.contain,
+                  ))),
           //actual chat
           Column(
             children: [
@@ -677,18 +675,18 @@ class _ChatwootChatState extends State<ChatwootChat> with WidgetsBindingObserver
                   child: Chat(
                     messages: _messages,
                     onMessageTap: _handleMessageTap,
-                    onPreviewDataFetched: (_,__){},
-                    onSendPressed: (_){},
+                    onPreviewDataFetched: (_, __) {},
+                    onSendPressed: (_) {},
                     user: _user,
                     onEndReached: widget.onEndReached,
                     onEndReachedThreshold: widget.onEndReachedThreshold,
                     onMessageLongPress: widget.onMessageLongPress,
-                    onAttachmentPressed: (){},
+                    onAttachmentPressed: () {},
                     showUserAvatars: widget.showUserAvatars,
                     showUserNames: widget.showUserNames,
                     theme: theme,
                     disableImageGallery: true,
-                    dateHeaderBuilder: (_){
+                    dateHeaderBuilder: (_) {
                       return SizedBox();
                     },
                     customBottomWidget: ChatInput(
@@ -696,98 +694,90 @@ class _ChatwootChatState extends State<ChatwootChat> with WidgetsBindingObserver
                         l10n: widget.l10n,
                         onMessageSent: _handleSendPressed,
                         onAttachmentPressed: _handleAttachmentPressed),
-                    textMessageBuilder: (message, {messageWidth=0, showName=true}){
+                    textMessageBuilder: (message,
+                        {messageWidth = 0, showName = true}) {
                       return TextChatMessage(
                           theme: theme,
                           message: message,
                           isMine: message.author.id == _user.id,
                           maxWidth: messageWidth,
-                          onPreviewFetched: _handlePreviewDataFetched
-                      );
+                          onPreviewFetched: _handlePreviewDataFetched);
                     },
-                    videoMessageBuilder: (message, {messageWidth=0}){
+                    videoMessageBuilder: (message, {messageWidth = 0}) {
                       return VideoChatMessage(
                           theme: theme,
                           message: message,
                           isMine: message.author.id == _user.id,
-                          maxWidth: messageWidth
-                      );
+                          maxWidth: messageWidth);
                     },
-                    audioMessageBuilder: (message, {messageWidth=0}){
+                    audioMessageBuilder: (message, {messageWidth = 0}) {
                       return AudioChatMessage(
-                          theme: theme,
-                          message: message,
-                          isMine: message.author.id == _user.id,
+                        theme: theme,
+                        message: message,
+                        isMine: message.author.id == _user.id,
                       );
                     },
-                    avatarBuilder: (user){
+                    avatarBuilder: (user) {
                       return Row(
                         children: [
                           ClipRRect(
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                             child: CachedNetworkImage(
-                                imageUrl: user.imageUrl ?? '',
-                                width: 30,
-                                height: 30,
-                                fit:BoxFit.cover,
-                                errorWidget: (_,__, ___){
-                                  String name = "${user.firstName} ${user.lastName}";
-                                  List<String> words = name.trim().split(RegExp(r'\s+'));
-                                  String initials = words.map((word) => word[0].toUpperCase()).join();
-                                  return PlaceholderCircle(
-                                    text: initials,
-                                    textColor: theme.primaryColor,
-                                  );
-                                },
+                              imageUrl: user.imageUrl ?? '',
+                              width: 30,
+                              height: 30,
+                              fit: BoxFit.cover,
+                              errorWidget: (_, __, ___) {
+                                String name =
+                                    "${user.firstName} ${user.lastName}";
+                                List<String> words =
+                                    name.trim().split(RegExp(r'\s+'));
+                                String initials = words
+                                    .map((word) => word[0].toUpperCase())
+                                    .join();
+                                return PlaceholderCircle(
+                                  text: initials,
+                                  textColor: theme.primaryColor,
+                                );
+                              },
                             ),
                           ),
-                          SizedBox(width: 5,)
+                          SizedBox(
+                            width: 5,
+                          )
                         ],
                       );
                     },
-                    customMessageBuilder:  (message, {messageWidth=0}){
-                      if(message.metadata?["feedback"] != null){
+                    customMessageBuilder: (message, {messageWidth = 0}) {
+                      if (message.metadata?["feedback"] != null) {
                         return RecordedCsatChatMessage(
                           theme: theme,
                           l10n: widget.l10n,
-                          message: message,
+                          message: types.CustomMessage(
+                              author: message.author, id: message.id),
                           maxWidth: messageWidth,
                         );
                       }
                       return CSATChatMessage(
-                          theme: theme,
-                          l10n: widget.l10n,
-                          message: message,
-                          maxWidth: messageWidth,
-                          sendCsatResults: (rating, feedback){
-                            chatwootClient?.sendCsatSurveyResults(message.metadata!['conversationUuid'], rating, feedback);
-                          },
+                        theme: theme,
+                        l10n: widget.l10n,
+                        message: types.CustomMessage(
+                            author: message.author, id: message.id),
+                        maxWidth: messageWidth,
+                        sendCsatResults: (rating, feedback) {
+                          chatwootClient?.sendCsatSurveyResults(
+                              message.metadata!['conversationUuid'],
+                              rating,
+                              feedback);
+                        },
                       );
                     },
                     l10n: widget.l10n,
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset(
-                      "assets/logo_grey.png",
-                      package: 'chatwoot_sdk',
-                      width: 15,
-                      height: 15,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
-                      child: Text(
-                        "Powered by Chatwoot",
-                        style: TextStyle(color: Colors.black45, fontSize: 12),
-                      ),
-                    )
-                  ],
-                ),
+              const SizedBox(
+                height: 24,
               )
             ],
           ),
@@ -810,13 +800,11 @@ class _ChatwootChatState extends State<ChatwootChat> with WidgetsBindingObserver
     videoPreviewLoader.dispose();
     LinkMetadata.dispose();
     controller.player.dispose();
-    _messages.forEach((m){
-      if(m is types.VideoMessage){
-        final controller= m.metadata?["controller"] as VideoController?;
+    _messages.forEach((m) {
+      if (m is types.VideoMessage) {
+        final controller = m.metadata?["controller"] as VideoController?;
         controller?.player.dispose();
       }
     });
   }
 }
-
-
