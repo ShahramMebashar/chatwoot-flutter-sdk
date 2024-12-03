@@ -10,7 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_chat_ui: ^1.1.9
+  flutter_chat_ui: ^1.6.15
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   uuid: ^3.0.4
@@ -29,8 +29,8 @@ dependencies:
   url_launcher: ^6.1.10
   path_provider: ^2.0.13
   cached_network_image: ^3.3.1
-  media_kit: ^1.1.11 # Primary package.
-  media_kit_video: ^1.2.5 # For video rendering.
+  # media_kit: ^1.1.11 # Primary package.
+  # media_kit_video: ^1.2.5 # For video rendering.
   media_kit_libs_video: ^1.0.5 # Native video dependencies.
   easy_image_viewer: ^1.5.1
   flutter_markdown: ^0.7.4+3

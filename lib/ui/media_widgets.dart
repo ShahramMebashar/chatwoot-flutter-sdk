@@ -1,13 +1,9 @@
-
 import 'package:chatwoot_sdk/data/remote/responses/csat_survey_response.dart';
 import 'package:chatwoot_sdk/ui/chatwoot_chat_theme.dart';
 import 'package:chatwoot_sdk/ui/chatwoot_l10n.dart';
 import 'package:chatwoot_sdk/ui/link_preview.dart';
-import 'package:chatwoot_sdk/ui/video_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:media_kit/media_kit.dart';
-import 'package:media_kit_video/media_kit_video.dart';
 
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:url_launcher/url_launcher.dart';
@@ -21,20 +17,13 @@ class FullScreenMediaViewer extends StatefulWidget {
 }
 
 class _FullScreenMediaViewerState extends State<FullScreenMediaViewer> {
-  late final Player player;
-  late VideoController _controller;
-
   @override
   void initState() {
     super.initState();
-    player = Player();
-    _controller = VideoController(player);
-    player.open(Media(widget.uri)); // Replace with your media URL
   }
 
   @override
   void dispose() {
-    player.dispose();
     super.dispose();
   }
 
@@ -44,12 +33,6 @@ class _FullScreenMediaViewerState extends State<FullScreenMediaViewer> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          Center(
-            child: Video(
-              controller: _controller,
-              fit: BoxFit.contain,
-            ),
-          ),
           Positioned(
             top: 20.0,
             right: 20.0,
@@ -66,30 +49,37 @@ class _FullScreenMediaViewerState extends State<FullScreenMediaViewer> {
   }
 }
 
-
 class AudioChatMessage extends StatefulWidget {
   final ChatwootChatTheme theme;
   final types.AudioMessage message;
   final bool isMine;
-  const AudioChatMessage({Key? key, required this.message, required this.isMine, required this.theme}) : super(key: key);
+  const AudioChatMessage(
+      {Key? key,
+      required this.message,
+      required this.isMine,
+      required this.theme})
+      : super(key: key);
 
   @override
   _AudioChatMessageState createState() => _AudioChatMessageState();
 }
 
 class _AudioChatMessageState extends State<AudioChatMessage> {
-
-
   void playAudio() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) =>  FullScreenMediaViewer(uri: widget.message.uri,)),
+      MaterialPageRoute(
+          builder: (context) => FullScreenMediaViewer(
+                uri: widget.message.uri,
+              )),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = widget.isMine ? widget.theme.sentMessageBodyTextStyle.color : widget.theme.receivedMessageBodyTextStyle.color;
+    final activeColor = widget.isMine
+        ? widget.theme.sentMessageBodyTextStyle.color
+        : widget.theme.receivedMessageBodyTextStyle.color;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
       child: Row(
@@ -125,13 +115,18 @@ class _AudioChatMessageState extends State<AudioChatMessage> {
   }
 }
 
-
 class VideoChatMessage extends StatefulWidget {
   final ChatwootChatTheme theme;
   final types.VideoMessage message;
   final bool isMine;
   final int maxWidth;
-  const VideoChatMessage({Key? key, required this.theme, required this.message, required this.isMine, required this.maxWidth}) : super(key: key);
+  const VideoChatMessage(
+      {Key? key,
+      required this.theme,
+      required this.message,
+      required this.isMine,
+      required this.maxWidth})
+      : super(key: key);
 
   @override
   _VideoChatMessageState createState() => _VideoChatMessageState();
@@ -142,11 +137,14 @@ class _VideoChatMessageState extends State<VideoChatMessage> {
   void playVideo() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) =>  FullScreenMediaViewer(uri: widget.message.uri,)),
+      MaterialPageRoute(
+          builder: (context) => FullScreenMediaViewer(
+                uri: widget.message.uri,
+              )),
     );
   }
 
-  VideoMessagePreview? get previewData =>widget.message.metadata?["preview"];
+  get previewData => widget.message.metadata?["preview"];
 
   @override
   void initState() {
@@ -162,8 +160,13 @@ class _VideoChatMessageState extends State<VideoChatMessage> {
         width: widget.maxWidth.toDouble(),
         child: Stack(
           children: [
-            if(previewData != null)
-              RawImage(image: previewData?.firstFrame?.image, fit: BoxFit.cover, width: widget.maxWidth.toDouble(), height: height,),
+            if (previewData != null)
+              RawImage(
+                image: previewData?.firstFrame?.image,
+                fit: BoxFit.cover,
+                width: widget.maxWidth.toDouble(),
+                height: height,
+              ),
             Positioned.fill(
               child: Center(
                 child: Container(
@@ -188,71 +191,81 @@ class _VideoChatMessageState extends State<VideoChatMessage> {
   }
 }
 
-
-
 class TextChatMessage extends StatefulWidget {
   final ChatwootChatTheme theme;
   final types.TextMessage message;
   final bool isMine;
   final int maxWidth;
-  final void Function(types.TextMessage,types.PreviewData) onPreviewFetched;
-  const TextChatMessage({
-    Key? key,
-    required this.theme,
-    required this.message,
-    required this.isMine,
-    required this.maxWidth,
-    required this.onPreviewFetched
-  }) : super(key: key);
+  final void Function(types.TextMessage, types.PreviewData) onPreviewFetched;
+  const TextChatMessage(
+      {Key? key,
+      required this.theme,
+      required this.message,
+      required this.isMine,
+      required this.maxWidth,
+      required this.onPreviewFetched})
+      : super(key: key);
 
   @override
   _TextChatMessageState createState() => _TextChatMessageState();
 }
 
 class _TextChatMessageState extends State<TextChatMessage> {
-
   @override
   Widget build(BuildContext context) {
     print("link: $messageLink");
     final styleSheet = MarkdownStyleSheet.fromTheme(Theme.of(context));
-    final textColor = widget.isMine ? widget.theme.sentMessageBodyTextStyle.color: widget.theme.receivedMessageBodyTextStyle.color;
+    final textColor = widget.isMine
+        ? widget.theme.sentMessageBodyTextStyle.color
+        : widget.theme.receivedMessageBodyTextStyle.color;
     return Container(
-      padding: EdgeInsets.symmetric(vertical: widget.theme.messageInsetsVertical, horizontal: widget.theme.messageInsetsHorizontal),
+      padding: EdgeInsets.symmetric(
+          vertical: widget.theme.messageInsetsVertical,
+          horizontal: widget.theme.messageInsetsHorizontal),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if(messageLink != null)
+          if (messageLink != null)
             LinkPreview(
               url: messageLink!, // This disables tap event
             ),
-          if(messageLink != null)
-            SizedBox(height: 8.0),
-          if(messageLink != widget.message.text.trim())
+          if (messageLink != null) SizedBox(height: 8.0),
+          if (messageLink != widget.message.text.trim())
             MarkdownBody(
-              data: widget.message.text,
-              onTapLink: (text,href,title){
-                if(href != null){
-                  launchUrl(Uri.parse(href));
-                }
-              },
-              styleSheet: styleSheet.copyWith(
-                code: widget.isMine ? widget.theme.sentMessageBodyCodeTextStyle: widget.theme.receivedMessageBodyCodeTextStyle,
-                p: widget.isMine ? widget.theme.sentMessageBodyTextStyle: widget.theme.receivedMessageBodyTextStyle,
-                h1: styleSheet.h1?.copyWith(color: textColor),
-                h2: styleSheet.h2?.copyWith(color: textColor),
-                h3: styleSheet.h3?.copyWith(color: textColor),
-                h4: styleSheet.h4?.copyWith(color: textColor),
-                h5: styleSheet.h5?.copyWith(color: textColor),
-                h6: styleSheet.h6?.copyWith(color: textColor),
-                tableBody: styleSheet.tableBody?.copyWith(color: textColor),
-                tableHead: styleSheet.tableHead?.copyWith(color: textColor),
-                a: widget.isMine ? styleSheet.a?.copyWith(color: Colors.white): styleSheet.a?.copyWith(color: widget.theme.primaryColor),
-              )
-          ),
-          if(widget.message.metadata?["sentAt"] != null)
+                data: widget.message.text,
+                onTapLink: (text, href, title) {
+                  if (href != null) {
+                    launchUrl(Uri.parse(href));
+                  }
+                },
+                styleSheet: styleSheet.copyWith(
+                  code: widget.isMine
+                      ? widget.theme.sentMessageBodyCodeTextStyle
+                      : widget.theme.receivedMessageBodyCodeTextStyle,
+                  p: widget.isMine
+                      ? widget.theme.sentMessageBodyTextStyle
+                      : widget.theme.receivedMessageBodyTextStyle,
+                  h1: styleSheet.h1?.copyWith(color: textColor),
+                  h2: styleSheet.h2?.copyWith(color: textColor),
+                  h3: styleSheet.h3?.copyWith(color: textColor),
+                  h4: styleSheet.h4?.copyWith(color: textColor),
+                  h5: styleSheet.h5?.copyWith(color: textColor),
+                  h6: styleSheet.h6?.copyWith(color: textColor),
+                  tableBody: styleSheet.tableBody?.copyWith(color: textColor),
+                  tableHead: styleSheet.tableHead?.copyWith(color: textColor),
+                  a: widget.isMine
+                      ? styleSheet.a?.copyWith(color: Colors.white)
+                      : styleSheet.a
+                          ?.copyWith(color: widget.theme.primaryColor),
+                )),
+          if (widget.message.metadata?["sentAt"] != null)
             Text(
               widget.message.metadata!["sentAt"],
-              style: (widget.isMine ? widget.theme.sentMessageBodyTextStyle: widget.theme.receivedMessageBodyTextStyle.copyWith(color: Colors.grey)).copyWith(fontSize: 12),
+              style: (widget.isMine
+                      ? widget.theme.sentMessageBodyTextStyle
+                      : widget.theme.receivedMessageBodyTextStyle
+                          .copyWith(color: Colors.grey))
+                  .copyWith(fontSize: 12),
             )
         ],
       ),
@@ -274,24 +287,20 @@ class _TextChatMessageState extends State<TextChatMessage> {
   }
 }
 
-
-
-
 class CSATChatMessage extends StatefulWidget {
-
   final ChatwootChatTheme theme;
   final ChatwootL10n l10n;
   final types.CustomMessage message;
   final int maxWidth;
-  final void Function(int,String) sendCsatResults;
-  const CSATChatMessage({
-    Key? key,
-    required this.theme,
-    required this.message,
-    required this.l10n,
-    required this.maxWidth,
-    required this.sendCsatResults
-  }) : super(key: key);
+  final void Function(int, String) sendCsatResults;
+  const CSATChatMessage(
+      {Key? key,
+      required this.theme,
+      required this.message,
+      required this.l10n,
+      required this.maxWidth,
+      required this.sendCsatResults})
+      : super(key: key);
 
   @override
   _CSATChatMessageState createState() => _CSATChatMessageState();
@@ -301,7 +310,7 @@ class _CSATChatMessageState extends State<CSATChatMessage> {
   String? selectedOption;
   String? feedback;
   bool isSentTapped = false;
-  late List<String> options ;
+  late List<String> options;
   final TextEditingController feedbackController = TextEditingController();
 
   @override
@@ -315,6 +324,7 @@ class _CSATChatMessageState extends State<CSATChatMessage> {
     ];
     super.initState();
   }
+
   @override
   void dispose() {
     feedbackController.dispose();
@@ -341,11 +351,13 @@ class _CSATChatMessageState extends State<CSATChatMessage> {
           Column(
             children: options.map((option) {
               return GestureDetector(
-                onTap: isSentTapped ? null : () {
-                  setState(() {
-                    selectedOption = option;
-                  });
-                },
+                onTap: isSentTapped
+                    ? null
+                    : () {
+                        setState(() {
+                          selectedOption = option;
+                        });
+                      },
                 child: Container(
                   margin: const EdgeInsets.symmetric(vertical: 4.0),
                   padding: const EdgeInsets.symmetric(
@@ -407,7 +419,7 @@ class _CSATChatMessageState extends State<CSATChatMessage> {
                   vertical: 10.0,
                 ),
               ),
-              onChanged: (text){
+              onChanged: (text) {
                 feedback = text;
               },
             ),
@@ -415,58 +427,58 @@ class _CSATChatMessageState extends State<CSATChatMessage> {
           const SizedBox(height: 16.0),
 
           // Send Button
-          if(!isSentTapped)
+          if (!isSentTapped)
             SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: selectedOption == null
-                  ? null
-                  : () {
-                // Handle submission
-                final rating = options.indexWhere((e)=>e == selectedOption)+1;
-                widget.sendCsatResults(rating, feedback??'');
-                setState(() {
-                  isSentTapped = true;
-                });
-              },
-              style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0),
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: selectedOption == null
+                    ? null
+                    : () {
+                        // Handle submission
+                        final rating =
+                            options.indexWhere((e) => e == selectedOption) + 1;
+                        widget.sendCsatResults(rating, feedback ?? '');
+                        setState(() {
+                          isSentTapped = true;
+                        });
+                      },
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  backgroundColor: selectedOption == null
+                      ? Colors.grey
+                      : widget.theme.primaryColor, // Disabled button styling
                 ),
-                backgroundColor: selectedOption == null
-                    ? Colors.grey
-                    : widget.theme.primaryColor, // Disabled button styling
-              ),
-              child: Text(
+                child: Text(
                   "Send",
-                style: widget.theme.sentMessageBodyTextStyle,
+                  style: widget.theme.sentMessageBodyTextStyle,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
   }
 }
 
-
-class RecordedCsatChatMessage extends StatelessWidget{
-
-
+class RecordedCsatChatMessage extends StatelessWidget {
   final ChatwootChatTheme theme;
   final ChatwootL10n l10n;
   final types.CustomMessage message;
   final int maxWidth;
   List<String> get options => [
-    l10n.csatVeryUnsatisfied,
-    l10n.csatUnsatisfied,
-    l10n.csatOK,
-    l10n.csatSatisfied,
-    l10n.csatVerySatisfied,
-  ];
-  CsatSurveyFeedbackResponse get feedback => message.metadata!["feedback"]! as CsatSurveyFeedbackResponse;
-  String get selectedOption => options[(feedback.csatSurveyResponse?.rating ?? 3)-1];
-  String get feedBackText => feedback.csatSurveyResponse?.feedbackMessage??'';
+        l10n.csatVeryUnsatisfied,
+        l10n.csatUnsatisfied,
+        l10n.csatOK,
+        l10n.csatSatisfied,
+        l10n.csatVerySatisfied,
+      ];
+  CsatSurveyFeedbackResponse get feedback =>
+      message.metadata!["feedback"]! as CsatSurveyFeedbackResponse;
+  String get selectedOption =>
+      options[(feedback.csatSurveyResponse?.rating ?? 3) - 1];
+  String get feedBackText => feedback.csatSurveyResponse?.feedbackMessage ?? '';
 
   RecordedCsatChatMessage({
     Key? key,
@@ -474,7 +486,7 @@ class RecordedCsatChatMessage extends StatelessWidget{
     required this.message,
     required this.l10n,
     required this.maxWidth,
-  }):super(key: key);
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -545,12 +557,10 @@ class RecordedCsatChatMessage extends StatelessWidget{
             feedBackText,
             style: theme.receivedMessageBodyTextStyle,
           ),
-
         ],
       ),
     );
   }
-
 }
 
 class PlaceholderCircle extends StatelessWidget {
@@ -584,15 +594,11 @@ class PlaceholderCircle extends StatelessWidget {
         style: textStyle ??
             TextStyle(
               color: textColor,
-              fontSize: size / 2.5, // Scales font size relative to the widget size
+              fontSize:
+                  size / 2.5, // Scales font size relative to the widget size
               fontWeight: FontWeight.bold,
             ),
       ),
     );
   }
 }
-
-
-
-
-

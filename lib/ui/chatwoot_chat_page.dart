@@ -13,14 +13,11 @@ import 'package:chatwoot_sdk/ui/chatwoot_chat_theme.dart';
 import 'package:chatwoot_sdk/ui/chatwoot_l10n.dart';
 import 'package:chatwoot_sdk/ui/link_preview.dart';
 import 'package:chatwoot_sdk/ui/media_widgets.dart';
-import 'package:chatwoot_sdk/ui/video_preview.dart';
 import 'package:easy_image_viewer/easy_image_viewer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:intl/intl.dart';
-import 'package:media_kit/media_kit.dart';
-import 'package:media_kit_video/media_kit_video.dart';
 import 'package:mime/mime.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
@@ -190,16 +187,10 @@ class _ChatwootChatState extends State<ChatwootChat>
   ChatwootClient? chatwootClient;
 
   late final ChatwootCallbacks chatwootCallbacks;
-  late VideoController controller;
-  late VideoPreviewLoader videoPreviewLoader;
 
   @override
   void initState() {
     super.initState();
-    MediaKit.ensureInitialized();
-    controller = VideoController(Player());
-    videoPreviewLoader = VideoPreviewLoader(controller: controller);
-    videoPreviewLoader.listen(_handleVideoPreviewLoaded);
     if (widget.user == null) {
       _user = types.User(id: idGen.v4());
     } else {
@@ -417,23 +408,6 @@ class _ChatwootChatState extends State<ChatwootChat>
             status: messageStatus ?? types.Status.seen,
             createdAt:
                 DateTime.parse(message.createdAt).millisecondsSinceEpoch);
-      } else if (message.attachments!.first.fileType == "video") {
-        final videoMessage = types.VideoMessage(
-            id: echoId ?? message.id.toString(),
-            author: author,
-            height: 500,
-            width: 500,
-            name: fileName,
-            metadata: metadata,
-            size: message.attachments!.first.fileSize ?? 0,
-            uri: message.attachments!.first.dataUrl!,
-            status: messageStatus ?? types.Status.seen,
-            createdAt:
-                DateTime.parse(message.createdAt).millisecondsSinceEpoch);
-
-        videoPreviewLoader.getPreview(
-            jobId: videoMessage.id, uri: videoMessage.uri);
-        return videoMessage;
       } else if (message.attachments!.first.fileType == "audio") {
         return types.AudioMessage(
             id: echoId ?? message.id.toString(),
@@ -564,18 +538,6 @@ class _ChatwootChatState extends State<ChatwootChat>
     });
   }
 
-  void _handleVideoPreviewLoaded(VideoMessagePreviewResult result) {
-    final index = _messages.indexWhere((element) => element.id == result.jobId);
-    if (index > -1) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        setState(() {
-          _messages[index] =
-              _messages[index].copyWith(metadata: {"preview": result.preview});
-        });
-      });
-    }
-  }
-
   void _handleSendPressed(String message) {
     final textMessage = types.TextMessage(
         author: _user,
@@ -604,18 +566,6 @@ class _ChatwootChatState extends State<ChatwootChat>
             uri: attachment.path,
             size: attachment.bytes.length,
             status: types.Status.sending);
-      } else if (lookupMimeType(attachment.name)?.startsWith("video") ??
-          false) {
-        message = types.VideoMessage(
-            author: _user,
-            createdAt: DateTime.now().millisecondsSinceEpoch,
-            id: const Uuid().v4(),
-            name: attachment.name,
-            uri: attachment.path,
-            size: attachment.bytes.length,
-            status: types.Status.sending);
-
-        videoPreviewLoader.getPreview(jobId: message.id, uri: attachment.path);
       } else if (lookupMimeType(attachment.name)?.startsWith("audio") ??
           false) {
         message = types.AudioMessage(
@@ -657,14 +607,6 @@ class _ChatwootChatState extends State<ChatwootChat>
       body: Stack(
         children: [
           //offscreen video player used to fetch first frame of video messages. media_kit screenshot doesn't work without
-          //controller tied to the video widget
-          IgnorePointer(
-              child: Opacity(
-                  opacity: 0,
-                  child: Video(
-                    controller: controller,
-                    fit: BoxFit.contain,
-                  ))),
           //actual chat
           Column(
             children: [
@@ -797,14 +739,6 @@ class _ChatwootChatState extends State<ChatwootChat>
   void dispose() {
     super.dispose();
     chatwootClient?.dispose();
-    videoPreviewLoader.dispose();
     LinkMetadata.dispose();
-    controller.player.dispose();
-    _messages.forEach((m) {
-      if (m is types.VideoMessage) {
-        final controller = m.metadata?["controller"] as VideoController?;
-        controller?.player.dispose();
-      }
-    });
   }
 }

@@ -98,7 +98,7 @@ void main() {
         'Given sending message fails when createMessage is called, then throw error',
         () async {
       //GIVEN
-      final testError = DioException(requestOptions: RequestOptions(path: ""));
+      final testError = DioError(requestOptions: RequestOptions(path: ""));
       final request =
           ChatwootNewMessageRequest(content: "test message", echoId: "id");
       when(mockDio.post(any, data: anyNamed("data"))).thenThrow(testError);
@@ -160,7 +160,7 @@ void main() {
         'Given fetch messages fails when getAllMessages is called, then throw error',
         () async {
       //GIVEN
-      final testError = DioException(requestOptions: RequestOptions(path: ""));
+      final testError = DioError(requestOptions: RequestOptions(path: ""));
       when(mockDio.get(any)).thenThrow(testError);
 
       //WHEN
@@ -218,7 +218,7 @@ void main() {
         'Given fetch contact fails when getContact is called, then throw error',
         () async {
       //GIVEN
-      final testError = DioException(requestOptions: RequestOptions(path: ""));
+      final testError = DioError(requestOptions: RequestOptions(path: ""));
       when(mockDio.get(any)).thenThrow(testError);
 
       //WHEN
@@ -278,7 +278,7 @@ void main() {
         'Given fetch conversations fails when getConversations is called, then throw error',
         () async {
       //GIVEN
-      final testError = DioException(requestOptions: RequestOptions(path: ""));
+      final testError = DioError(requestOptions: RequestOptions(path: ""));
       when(mockDio.get(any)).thenThrow(testError);
 
       //WHEN
@@ -339,7 +339,7 @@ void main() {
         () async {
       //GIVEN
       final update = {"name": "Updated name"};
-      final testError = DioException(requestOptions: RequestOptions(path: ""));
+      final testError = DioError(requestOptions: RequestOptions(path: ""));
       when(mockDio.patch(any, data: update)).thenThrow(testError);
 
       //WHEN
@@ -404,7 +404,7 @@ void main() {
       //GIVEN
       final testMessageId = "id";
       final update = {"content": "Updated content"};
-      final testError = DioException(requestOptions: RequestOptions(path: ""));
+      final testError = DioError(requestOptions: RequestOptions(path: ""));
       when(mockDio.patch(any, data: update)).thenThrow(testError);
 
       //WHEN
@@ -486,7 +486,7 @@ void main() {
       final testConversationUuid = "conversation-uuid";
       final feedbackRequest =
           SendCsatSurveyRequest(rating: 1, feedbackMessage: "test message");
-      final testError = DioException(requestOptions: RequestOptions(path: ""));
+      final testError = DioError(requestOptions: RequestOptions(path: ""));
       final requestBody = {
         "message": {
           "submitted_values": {"csat_survey_response": feedbackRequest.toJson()}
